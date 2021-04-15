@@ -15,7 +15,10 @@ def menu():
     logado = autenticar_login()
     if logado is None:
         return render_template("/index.html", erro = "")
-    return render_template("menumaster.html", logado = logado, mensagem = "")
+    if logado['tipo']=="admin":
+        return render_template("dashmaster.html", logado = logado, mensagem = "")
+    else:
+        return render_template("dashvendedor.html", logado = logado, mensagem = "")  
 
 
 @app.route("/login", methods = ["POST"])
@@ -51,6 +54,40 @@ def logout():
     return resposta
 
 
+## Dasboard ####
+
+
+@app.route("/dashmaster")
+def dashmaster():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+    if logado['tipo']=="admin":
+        return render_template("dashmaster.html", logado = logado, mensagem = "")
+    else:
+        return render_template("dashvendedor.html", logado = logado, mensagem = "")  
+
+
+
+
+### usuarios ###
+@app.route("/usuarios")
+def listar_usuarios_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    lista = db_listar_usuarios()
+
+    # Monta a resposta.
+    return render_template("usuarios.html", logado = logado, usuarios = lista)
+
+
+
+
 
 ###############################################
 #### Coisas internas da controller da API. ####
@@ -84,6 +121,10 @@ def autenticar_login():
     return db_fazer_login(login, senha)
 
 
+##########################################
+#### Definições de regras de negócio. ####
+##########################################
+
 
 
 
@@ -116,11 +157,20 @@ def rows_to_dict(description, rows):
 def conectar():
     return mysql.connector.connect(host="adducis.ch3noq1jgsa1.us-east-2.rds.amazonaws.com",user="adducis",password= "654artesanais",database="Usuarios")
 
+def db_consultar_usuario(id):
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT id, nome, login, senha, tipo FROM usuario WHERE a.id_aluno = %s;", (id_aluno))
+        return row_to_dict(cur.description, cur.fetchone())
 
+
+def db_listar_usuarios():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT id, nome, login, senha, telefone, tipo FROM usuario")
+        return rows_to_dict(cur.description, cur.fetchall())
 
 def db_fazer_login(login, senha):
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT login, senha, nome FROM usuario WHERE login = %s AND senha = %s;", (login, senha))
+        cur.execute("SELECT login, senha, nome, tipo FROM usuario WHERE login = %s AND senha = %s;", (login, senha))
         return row_to_dict(cur.description, cur.fetchone())
 
 

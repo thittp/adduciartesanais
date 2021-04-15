@@ -1,20 +1,8 @@
 {% extends "base.html" %}
-{% block titulo %}{% endblock %}
+{% block titulo %}Cadastro{% endblock %}
 {% block js %}
     function logout() {
         document.getElementById("form_logout").submit();
-    }
-
-    window.onscroll=function(){
-    fixarMenuNoTopo();
-    }
-
-    function fixarMenuNoTopo(){
-    if(window.pageYOffset >= topoNav){
-        nav.classList.add("FixoNoTopo");
-    }else{
-        nav.classList.remove("FixoNoTopo")
-    }
     }
 {% endblock %}
 {% block conteudo %}
@@ -23,13 +11,9 @@
     {% endif %}
             <nav>
             <a href="">DASHBOARD</a>
-            <a href="">INSUMOS</a>
             <a href="">ESTOQUE</a>
             <a href="">CAIXA</a>
-            <a href="/usuarios">USUÁRIOS</a>
             <a href="#" onclick="javascript:logout()">SAIR</a>
             <form action="/logout" id="form_logout" method="POST" style="display: none"></form>
             </nav>
-
-
 {% endblock %}

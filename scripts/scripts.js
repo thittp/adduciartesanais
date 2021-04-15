@@ -2,7 +2,6 @@ const nav=document.getElementsByTagName("nav")[0];
 const topoNav=nav.offsetTop;
 
 
-
 window.onscroll=function(){
     fixarMenuNoTopo();
 }
