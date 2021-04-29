@@ -85,6 +85,35 @@ def listar_usuarios_api():
     # Monta a resposta.
     return render_template("usuarios.html", logado = logado, usuarios = lista)
 
+# Tela com o formulário de criação de um novo usuario.
+@app.route("/usuario/novo", methods = ["GET"])
+def form_criar_usuario_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    #aluno = {'id_aluno': 'novo', 'nome': '', 'sexo': '', 'id_serie': '', 'id_foto': ''}
+
+    # Monta a resposta.
+    return render_template("form_convite.html", logado = logado)
+
+
+
+### insumos ###
+@app.route("/insumos")
+def listar_insumos_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    lista = db_listar_insumos()
+
+    # Monta a resposta.
+    return render_template("insumos.html", logado = logado, insumo = lista)
 
 
 
@@ -174,6 +203,11 @@ def db_fazer_login(login, senha):
         return row_to_dict(cur.description, cur.fetchone())
 
 
+
+def db_listar_insumos():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT I.id_insumo, I.nome_insumo, coalesce(sum(C.quantidade_insumo), '-') as soma FROM insumos AS I LEFT JOIN itemcompra AS C ON I.id_insumo = C.id_insumo GROUP BY I.id_insumo")
+        return rows_to_dict(cur.description, cur.fetchall())
 
 ########################
 #### Inicialização. ####

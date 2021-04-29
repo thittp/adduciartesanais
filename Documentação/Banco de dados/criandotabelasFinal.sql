@@ -1,28 +1,34 @@
 CREATE TABLE usuario (
-  id int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   nome_completo varchar(200) NOT NULL,
   login varchar(10) UNIQUE NOT NULL,
   senha varchar(8) NOT NULL,
   cpf char(11) NOT NULL,
-  tipo_usuario varchar(100),
-  celular varchar(20),
-  forma_recebimento varchar(20) NOT NULL,
-  pix_chave varchar(30),
+  email varchar(30) NOT NULL,
+  tipo_usuario varchar(50) NOT NULL,
+  celular varchar(20) NOT NULL,
+  pix_chave varchar(50),
   banco varchar(20),
   tipo_conta varchar(20),
-  agencia varchar(20),
-  conta varchar(20),
+  agencia varchar(7),
+  conta varchar(15),
   cep int NOT NULL,
-  lagradouro varchar(30) NOT NULL,
+  logradouro varchar(30) NOT NULL,
   numero varchar(20) NOT NULL,
-  complemento varchar(20) NOT NULL,
+  complemento varchar(20),
   cidade varchar(20) NOT NULL,
   uf varchar(2) NOT NULL
 );
 
+CREATE TABLE convusuario (
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  nome_completo varchar(200) NOT NULL,
+  email varchar(30) NOT NULL
+);
+
 
 CREATE TABLE produto (
-  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   nome_produto varchar(20) NOT NULL,
   preco_atual float(4) NOT NULL,
   ingredientes varchar(200) NOT NULL,
@@ -31,7 +37,7 @@ CREATE TABLE produto (
 );
 
 CREATE TABLE fabricacao (
-  id int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  id int PRIMARY KEY NOT NULL AUTO_INCREMENT,
   id_produto int NOT NULL,
   quantidade_fabricacao int NOT NULL,
   data_fabricacao date NOT NULL,
@@ -40,7 +46,7 @@ CREATE TABLE fabricacao (
 );
 
 CREATE TABLE repasse (
-  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   id_usuario int NOT NULL,
   data_entrega date NOT NULL,
   valor_repasse float,
@@ -48,7 +54,7 @@ CREATE TABLE repasse (
 );
 
 CREATE TABLE itensrepasse (
-  id INT AUTO_INCREMENT NOT NULL,
+  id INT NOT NULL AUTO_INCREMENT,
   id_repasse int NOT NULL,
   id_produto int NOT NULL,
   id_fabricacao int NOT NULL,
@@ -60,8 +66,8 @@ CREATE TABLE itensrepasse (
   CONSTRAINT fkRepasseFabricacao FOREIGN KEY (id_fabricacao) REFERENCES	fabricacao(id)
 );
 
-CREATE TABLE vendas(
-  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+CREATE TABLE vendas (
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   id_usuario int NOT NULL,
   data_venda date NOT NULL,
   canal_venda varchar(20),
@@ -71,8 +77,8 @@ CREATE TABLE vendas(
 );
 
 
-CREATE TABLE itensvendas(
-  id INT AUTO_INCREMENT NOT NULL,
+CREATE TABLE itensvendas (
+  id INT NOT NULL AUTO_INCREMENT,
   id_venda INT NOT NULL,
   id_produto INT NOT NULL,
   quantidade int NOT NULL,
@@ -80,4 +86,36 @@ CREATE TABLE itensvendas(
   CONSTRAINT pkItensVendas PRIMARY KEY (id, id_venda, id_produto),
   CONSTRAINT fkItensVendasVendas FOREIGN KEY (id_venda) REFERENCES vendas(id),
   CONSTRAINT fkItensVendasProduto FOREIGN KEY (id_produto) REFERENCES produto(id)
+);
+
+
+CREATE TABLE insumos (
+  id_insumo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  nome_insumo VARCHAR(20)
+);
+
+CREATE TABLE compra (
+  id_compra INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  data_compra DATE NOT NULL,
+  preco_compra float NOT NULL
+);
+
+CREATE TABLE itemcompra (
+  id_item INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  id_compra INT NOT NULL,
+  id_insumo INT NOT NULL,
+  data_vencimento date NOT NULL,
+  quantidade_insumo INT NOT NULL,
+  unidade_medida char(4) NOT NULL,
+  preco_insumo FLOAT NOT NULL,
+  CONSTRAINT fkItemcompracompra FOREIGN KEY (id_compra) REFERENCES compra(id_compra),
+  CONSTRAINT fkItemcompraInsumo FOREIGN KEY (id_insumo) REFERENCES insumos(id_insumo)
+);
+
+CREATE TABLE utilizacao_insumo (
+  id_utilizacao INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  id_insumo int NOT NULL,
+  data_registro date NOT NULL,
+  quantidade_utilizada int NOT NULL,
+  CONSTRAINT fkUtilizacaoInsumo FOREIGN KEY (id_usumo) REFERENCES insumos(id)
 );

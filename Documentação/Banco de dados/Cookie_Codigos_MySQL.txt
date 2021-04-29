@@ -1,5 +1,5 @@
 CREATE TABLE usuario (
-  id PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   nome_completo varchar(200) NOT NULL,
   login varchar(10) UNIQUE NOT NULL,
   senha varchar(8) NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE usuario (
 );
 
 CREATE TABLE produto (
-  id PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   nome_produto varchar(20) NOT NULL,
   preco_atual float(4) NOT NULL,
   ingredientes varchar(200) NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE repasse (
   id_usuario int NOT NULL,
   data_entrega date NOT NULL,
   valor_repasse float,
-  CONSTRAINT fkRepasseUsuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
+  CONSTRAINT fkRepasseUsuario FOREIGN KEY (id_usuario) REFERENCES usuario(id)
 );
 
 CREATE TABLE itensrepasse (
@@ -56,7 +56,7 @@ CREATE TABLE itensrepasse (
   CONSTRAINT pkRepasse PRIMARY KEY (id, id_repasse, id_produto),
   CONSTRAINT fkRepasseItens FOREIGN KEY (id_repasse) REFERENCES repasse(id),
   CONSTRAINT fkRepasseProduto FOREIGN KEY (id_produto) REFERENCES produto(id),
-  CONSTRAINT fkRepasseFabricacao FOREIGN KEY (id_fabricacao) REFERENCES	fabricacao(id), 
+  CONSTRAINT fkRepasseFabricacao FOREIGN KEY (id_fabricacao) REFERENCES	fabricacao(id)
 );
 
 CREATE TABLE vendas (
@@ -66,7 +66,7 @@ CREATE TABLE vendas (
   canal_venda varchar(20),
   desconto_venda float,
   preco_venda float NOT NULL, 
-  CONSTRAINT fkVendasUsuario FOREIGN KEY (id_usuario) REFERENCES usuario(id),
+  CONSTRAINT fkVendasUsuario FOREIGN KEY (id_usuario) REFERENCES usuario(id)
 );
 
 
@@ -78,7 +78,7 @@ CREATE TABLE itensvendas (
   valor_unitario float NOT NULL,
   CONSTRAINT pkItensVendas PRIMARY KEY (id, id_venda, id_produto),
   CONSTRAINT fkItensVendasVendas FOREIGN KEY (id_venda) REFERENCES vendas(id),
-  CONSTRAINT fkItensVendasProduto FOREIGN KEY (id_produto) REFERENCES produto(id),
+  CONSTRAINT fkItensVendasProduto FOREIGN KEY (id_produto) REFERENCES produto(id)
 );
 
 
@@ -93,14 +93,14 @@ CREATE TABLE abastecimento (
   id_insumo INT NOT NULL,
   data_vencimento date NOT NULL,
   quantidade_insumo int NOT NULL,
-  preco_insumo float NOT NULL
-  CONSTRAINT fkAbastecimentoInsumos FOREIGN KEY (id_insumo) REFERENCES insumos(id),
+  preco_insumo float NOT NULL,
+  CONSTRAINT fkAbastecimentoInsumos FOREIGN KEY (id_insumo) REFERENCES insumos(id)
 );
 
 CREATE TABLE utilizacao_insumo (
   id_utilizacao INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   id_insumo int NOT NULL,
   data_registro date NOT NULL,
-  quantidade_utilizada int NOT NULL
-  CONSTRAINT fkUtilizacaoInsumo FOREIGN KEY (id_usumo) REFERENCES insumos(id),
+  quantidade_utilizada int NOT NULL,
+  CONSTRAINT fkUtilizacaoInsumo FOREIGN KEY (id_usumo) REFERENCES insumos(id)
 );
