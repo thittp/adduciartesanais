@@ -29,7 +29,7 @@ CREATE TABLE convusuario (
 
 CREATE TABLE produto (
   id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  nome_produto varchar(20) NOT NULL,
+  nome_produto varchar(50) NOT NULL,
   preco_atual float(4) NOT NULL,
   ingredientes varchar(200) NOT NULL,
   prazo_validade int NOT NULL,
@@ -37,12 +37,19 @@ CREATE TABLE produto (
 );
 
 CREATE TABLE fabricacao (
-  id int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  id_produto int NOT NULL,
-  quantidade_fabricacao int NOT NULL,
-  data_fabricacao date NOT NULL,
-  vencimento date NOT NULL,
-  CONSTRAINT fkfabricacaoproduto FOREIGN KEY (id_produto) REFERENCES produto(id)
+  id_fabricacao int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  data_fabricacao date NOT NULL
+);
+
+
+CREATE TABLE itemfabricacao (
+  id_item INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  id_fabricacao INT NOT NULL,
+  id_produto INT NOT NULL,
+  quantidade INT NOT NULL,
+  prazo_vencimento INT NOT NULL,
+  CONSTRAINT fkItemfabricacaofabricacao FOREIGN KEY (id_fabricacao) REFERENCES fabricacao(id_fabricacao),
+  CONSTRAINT fkItemfabricacaoProduto FOREIGN KEY (id_produto) REFERENCES produto(id)
 );
 
 CREATE TABLE repasse (

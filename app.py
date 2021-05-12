@@ -93,8 +93,8 @@ def form_criar_usuario_api():
     if logado is None:
         return redirect("/")
 
-    # Faz o processamento.
-    #aluno = {'id_aluno': 'novo', 'nome': '', 'sexo': '', 'id_serie': '', 'id_foto': ''}
+    #Faz o processamento.
+    usuario = {'id': 'novo', 'nome': '', 'email': ''}
 
     # Monta a resposta.
     return render_template("form_convite.html", logado = logado)
@@ -114,6 +114,55 @@ def listar_insumos_api():
 
     # Monta a resposta.
     return render_template("insumos.html", logado = logado, insumo = lista)
+
+# Tela com o formulário de inserção de insumo.
+@app.route("/insumos/novo", methods = ["GET"])
+def form_inserir_insumo_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    #aluno = {'id_aluno': 'novo', 'nome': '', 'sexo': '', 'id_serie': '', 'id_foto': ''}
+
+    # Monta a resposta.
+    return render_template("cad_insumo.html", logado = logado)
+
+
+
+
+### estoque ###
+@app.route("/estoque")
+def listar_estoque_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    lista = db_listar_estoque()
+
+    # Monta a resposta.
+    return render_template("estoque.html", logado = logado, produto = lista)
+
+
+### caixa ###
+@app.route("/caixa")
+def listar_entradas_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    lista = db_listar_saldo()
+    lista1 = db_listar_entradas()
+    lista2 = db_listar_saidas()
+
+    # Monta a resposta.
+    return render_template("caixa.html", logado = logado, saldo = lista, entradas = lista1, saidas = lista2)
+
 
 
 
@@ -206,8 +255,33 @@ def db_fazer_login(login, senha):
 
 def db_listar_insumos():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT I.id_insumo, I.nome_insumo, coalesce(sum(C.quantidade_insumo), '-') as soma FROM insumos AS I LEFT JOIN itemcompra AS C ON I.id_insumo = C.id_insumo GROUP BY I.id_insumo")
+        cur.execute("SELECT I.id_insumo, I.nome_insumo, coalesce(sum(C.quantidade_insumo), '-') as soma,  min(date_format(C.data_vencimento, '%d-%m-%Y')) as vencimento FROM insumos AS I LEFT JOIN itemcompra AS C ON I.id_insumo = C.id_insumo Where C.data_vencimento > CURDATE() GROUP BY I.id_insumo")
         return rows_to_dict(cur.description, cur.fetchall())
+
+
+def db_listar_estoque():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT P.id, P.nome_produto, sum(F.quantidade) - sum(V.quantidade) AS quantidade FROM produto as P LEFT JOIN itemfabricacao AS F ON P.id = F.id_produto LEFT JOIN itensvendas AS V ON P.id = V.id_produto GROUP BY P.id")
+        return rows_to_dict(cur.description, cur.fetchall())
+
+def db_listar_saldo():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT X.data_registro as 'Data', format(coalesce(sum(X.valor_entrada),0)-(coalesce(sum(X.valor_saida),0)), 2) as ValorDia FROM caixa as X GROUP BY X.data_registro")
+        return rows_to_dict(cur.description, cur.fetchall())
+
+
+def db_listar_entradas():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT V.data_venda as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(V.preco_venda), 2), '.', ',')) AS Valor FROM vendas as V GROUP BY V.data_venda")
+        return rows_to_dict(cur.description, cur.fetchall())
+
+def db_listar_saidas():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT C.data_compra as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(C.preco_compra), 2), '.', ',')) AS Valor FROM compra as C GROUP BY C.data_compra")
+        return rows_to_dict(cur.description, cur.fetchall())
+
+
+
 
 ########################
 #### Inicialização. ####
