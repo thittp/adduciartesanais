@@ -8,7 +8,7 @@ import werkzeug
 
 app = Flask(__name__)
 
-
+### Partes de login. ###
 @app.route("/")
 @app.route("/login")
 def menu():
@@ -69,9 +69,9 @@ def dashmaster():
         return render_template("dashvendedor.html", logado = logado, mensagem = "")  
 
 
+### Cadastro de usuarios. ###
 
-
-### usuarios ###
+# Tela de listagem de usuarios.
 @app.route("/usuarios")
 def listar_usuarios_api():
     # Autenticação.
@@ -85,20 +85,36 @@ def listar_usuarios_api():
     # Monta a resposta.
     return render_template("usuarios.html", logado = logado, usuarios = lista)
 
-# Tela com o formulário de criação de um novo usuario.
-@app.route("/usuario/novo", methods = ["GET"])
+# Tela com o formulário de criação de usuario.
+@app.route("/usuarios/novo", methods = ["GET"])
 def form_criar_usuario_api():
     # Autenticação.
     logado = autenticar_login()
     if logado is None:
         return redirect("/")
 
-    #Faz o processamento.
-    usuario = {'id': 'novo', 'nome': '', 'email': ''}
+    # Faz o processamento.
+    usuario = {'id': 'novo', 'nome': '', 'login': '', 'senha': '', 'tipo': '', 'telefone': ''}
 
     # Monta a resposta.
-    return render_template("form_convite.html", logado = logado)
+    return render_template("form_usuario.html", logado = logado, usuario = usuario)
 
+# Tela com o formulário de alteração de usuario existente.
+@app.route("/usuarios/<int:id>", methods = ["GET"])
+def form_alterar_usuario_api(id):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    usuario = db_consultar_usuario(id)
+    
+
+    # Monta a resposta.
+    if usuario is None:
+        return render_template("usuarios.html", logado = logado, mensagem = f"Esse usuario não existe."), 404
+    return render_template("form_usuario.html", logado = logado, convite = usuario)
 
 
 ### insumos ###
@@ -203,8 +219,13 @@ def autenticar_login():
 #### Definições de regras de negócio. ####
 ##########################################
 
+def criar_usuario(nome, login, senha, tipo, telefone):
+    return db_criar_usuario(nome, login, senha, tipo, telefone)
 
-
+def editar_usuario(id, nome, login, senha, tipo, telefone):
+    convite = db_consultar_usaurio(id)
+    db_editar_usuario(id, nome, login, senha, tipo, telefone)
+    return 'alterado', usuario
 
 ###############################################
 #### Funções auxiliares de banco de dados. ####
@@ -235,6 +256,11 @@ def rows_to_dict(description, rows):
 def conectar():
     return mysql.connector.connect(host="adducis.ch3noq1jgsa1.us-east-2.rds.amazonaws.com",user="adducis",password= "654artesanais",database="Usuarios")
 
+def db_fazer_login(login, senha):
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT login, senha, nome, tipo FROM usuario WHERE login = %s AND senha = %s;", (login, senha))
+        return row_to_dict(cur.description, cur.fetchone())
+
 def db_consultar_usuario(id):
     with closing(conectar()) as con, closing(con.cursor()) as cur:
         cur.execute("SELECT id, nome, login, senha, tipo FROM usuario WHERE a.id_aluno = %s;", (id_aluno))
@@ -243,13 +269,22 @@ def db_consultar_usuario(id):
 
 def db_listar_usuarios():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT id, nome, login, senha, telefone, tipo FROM usuario")
+        cur.execute("SELECT id, nome, login, senha, tipo, telefone FROM usuario")
         return rows_to_dict(cur.description, cur.fetchall())
 
-def db_fazer_login(login, senha):
+
+def db_criar_usuario(nome, login, senha, tipo, telefone):
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT login, senha, nome, tipo FROM usuario WHERE login = %s AND senha = %s;", (login, senha))
-        return row_to_dict(cur.description, cur.fetchone())
+        cur.execute("INSERT INTO usuario (nome, login, senha, tipo, telefone) VALUES (?, ?, ?, ?)", [nome, login, senha, tipo, telefone])
+        id = cur.lastrowid
+        con.commit()
+        return {'id': id, 'nome': nome, 'login': login, 'senha': senha, 'tipo': tipo, 'telefone': telefone}
+
+def db_editar_aluno(id, nome, login, senha, tipo, telefone):
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("UPDATE aluno SET nome = ?, login = ?, senha = ?, tipo = ?, telefone = ? WHERE id = ?", [nome, login, senha, tipo, telefone, id])
+        con.commit()
+        return {'id': id, 'nome': nome, 'login': login, 'senha': senha, 'tipo': tipo, 'telefone': telefone}
 
 
 

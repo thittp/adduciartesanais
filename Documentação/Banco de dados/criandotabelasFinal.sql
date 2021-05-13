@@ -126,3 +126,11 @@ CREATE TABLE utilizacao_insumo (
   quantidade_utilizada int NOT NULL,
   CONSTRAINT fkUtilizacaoInsumo FOREIGN KEY (id_usumo) REFERENCES insumos(id)
 );
+
+CREATE TABLE caixa (
+  id_caixa INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  data_registro date NOT NULL,
+  valor_saida float,
+  valor_entrada float
+);
+
