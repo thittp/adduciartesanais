@@ -6,7 +6,8 @@
     
     
     <div class="grid">
-       <p><a href="/estoque/novo"><button>Adicionar</button>
+       <p><a href="/estoque/novo"><button>Adicionar Produto</button></p>
+       <p><a href="/fabricacao"><button>Adicionar fabricação</button></p>
           <table>
             <tr>
             <td>ID</td>
@@ -17,10 +18,10 @@
             </tr>
         {% for produto in produto %}
             <tr>
-                <td>{{produto['id']}}</td>
-                <td>{{produto['nome_produto']}}</td>
+                <td>{{produto['id_produto']}}</td>
+                <td>{{produto['nome']}}</td>
                 <td>{{produto['quantidade']}}</td>
-                <td><a href="">Editar</a></td>
+                <td><a href="{{produto['id_produto']}}">Editar</a></td>
 
             </tr>
         {% endfor %}

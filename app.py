@@ -1,8 +1,11 @@
 from flask import Flask, make_response, request, render_template, redirect, send_from_directory
 from contextlib import closing
-import mysql.connector
+import regras as rg
+import bd as bd
 import os
 import werkzeug
+
+#import matplotlib as plt
 
 
 
@@ -31,7 +34,7 @@ def login():
     senha = f["senha"]
 
     # Faz o processamento.
-    logado = db_fazer_login(login, senha)
+    logado = bd.db_fazer_login(login, senha)
 
     # Monta a resposta.
     if logado is None:
@@ -80,7 +83,7 @@ def listar_usuarios_api():
         return redirect("/")
 
     # Faz o processamento.
-    lista = db_listar_usuarios()
+    lista = bd.db_listar_usuarios()
 
     # Monta a resposta.
     return render_template("usuarios.html", logado = logado, usuarios = lista)
@@ -108,13 +111,79 @@ def form_alterar_usuario_api(id):
         return redirect("/")
 
     # Faz o processamento.
-    usuario = db_consultar_usuario(id)
+    usuario = bd.db_consultar_usuario(id)
     
 
     # Monta a resposta.
     if usuario is None:
         return render_template("usuarios.html", logado = logado, mensagem = f"Esse usuario não existe."), 404
-    return render_template("form_usuario.html", logado = logado, convite = usuario)
+    return render_template("form_usuario.html", logado = logado, usuario = usuario)
+
+# Processa o formulário de criação de usuarios. 
+@app.route("/usuarios/novo", methods = ["POST"])
+def criar_usuario_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    nome = request.form["nome"]
+    login = request.form["login"]
+    senha = request.form["senha"]
+    tipo = request.form["tipo"]
+    telefone = request.form["telefone"]
+
+    # Faz o processamento.
+    usuario = rg.criar_usuario(nome, login, senha, tipo, telefone)
+
+    # Monta a resposta.
+    mensagem = f"O usuario {nome} foi criado com o id {usuario['id']}."
+    return render_template("usuarios.html", logado = logado, mensagem = mensagem)
+
+# Processa o formulário de alteração de usuarios.
+@app.route("/usuarios/<int:id>", methods = ["POST"])
+def editar_usuario_api(id):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    nome = request.form["nome"]
+    login = request.form["login"]
+    senha = request.form["senha"]
+    tipo = request.form["tipo"]
+    telefone = request.form["telefone"]
+
+    # Faz o processamento.
+    status, usuario = rg.editar_usuario(id, nome, login, senha, tipo, telefone)
+
+    # Monta a resposta.
+    if status == 'não existe':
+        mensagem = "Esse usuario nem mesmo existia mais."
+        return render_template("usuarios.html", logado = logado, mensagem = mensagem), 404
+    mensagem = f"O usuario {nome} com o id {id} foi editado."
+    return render_template("usuarios.html", logado = logado, mensagem = mensagem)
+
+# Processa o botão de excluir um usuarios.
+@app.route("/usuarios/<int:id>", methods = ["DELETE"])
+def deletar_usuario_api(id):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    usuario = rg.apagar_usuario(id)
+
+    # Monta a resposta.
+    if usuario is None:
+        return render_template("usuario.html", logado = logado, mensagem = "Esse usuario nem mesmo existia mais."), 404
+    mensagem = f"O usuario com o id {id} foi excluído."
+    return render_template("usuarios.html", logado = logado, mensagem = mensagem)
+
+
 
 
 ### insumos ###
@@ -126,24 +195,98 @@ def listar_insumos_api():
         return redirect("/")
 
     # Faz o processamento.
-    lista = db_listar_insumos()
+    lista = bd.db_listar_insumos()
 
     # Monta a resposta.
     return render_template("insumos.html", logado = logado, insumo = lista)
 
-# Tela com o formulário de inserção de insumo.
+# Tela com o formulário de criação de insumos.
 @app.route("/insumos/novo", methods = ["GET"])
-def form_inserir_insumo_api():
+def form_criar_insumo_api():
     # Autenticação.
     logado = autenticar_login()
     if logado is None:
         return redirect("/")
 
     # Faz o processamento.
-    #aluno = {'id_aluno': 'novo', 'nome': '', 'sexo': '', 'id_serie': '', 'id_foto': ''}
+    insumo = {'id': 'novo', 'nome': ''}
 
     # Monta a resposta.
-    return render_template("cad_insumo.html", logado = logado)
+    return render_template("cad_insumo.html", logado = logado, insumo = insumo)
+
+# Tela com o formulário de alteração de insumo existente.
+@app.route("/insumo/<int:id>", methods = ["GET"])
+def form_alterar_insumo_api(id):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    insumo = bd.db_consultar_insumo(id_insumo)
+    
+
+    # Monta a resposta.
+    if insumo is None:
+        return render_template("insumos.html", logado = logado, mensagem = f"Esse insumo não existe."), 404
+    return render_template("cad_insumo.html", logado = logado, insumo = insumo)
+
+# Processa o formulário de criação de insumo. 
+@app.route("/insumos/novo", methods = ["POST"])
+def criar_insumo_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    nome = request.form["nome"]
+
+    # Faz o processamento.
+    insumo = rg.criar_insumo(nome)
+
+    # Monta a resposta.
+    mensagem = f"O Insumo {nome} foi criado com o id {insumo['id_insumo']}."
+    return render_template("insumos.html", logado = logado, mensagem = mensagem)
+
+# Processa o formulário de alteração de insumo.
+@app.route("/insumos/<int:id>", methods = ["POST"])
+def editar_insumo_api(id_insumo):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    nome = request.form["nome"]
+
+
+    # Faz o processamento.
+    status, insumo = rg.editar_insumo(id_insumo, nome)
+
+    # Monta a resposta.
+    if status == 'não existe':
+        mensagem = "Esse insumo nem mesmo existia mais."
+        return render_template("insumos.html", logado = logado, mensagem = mensagem), 404
+    mensagem = f"O insumo {nome} com o id {id} foi editado."
+    return render_template("insumos.html", logado = logado, mensagem = mensagem)
+
+# Processa o botão de excluir um insumos.
+@app.route("/insumos/<int:id>", methods = ["DELETE"])
+def deletar_insumo_api(id_insumo):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    insumo = rg.apagar_insumo(id_insumo)
+
+    # Monta a resposta.
+    if insumo is None:
+        return render_template("insumos.html", logado = logado, mensagem = "Esse insumo nem mesmo existia mais."), 404
+    mensagem = f"O insumo com o id {id_insumo} foi excluído."
+    return render_template("insumos.html", logado = logado, mensagem = mensagem)
 
 
 
@@ -157,10 +300,171 @@ def listar_estoque_api():
         return redirect("/")
 
     # Faz o processamento.
-    lista = db_listar_estoque()
+    lista = bd.db_listar_estoque()
 
     # Monta a resposta.
     return render_template("estoque.html", logado = logado, produto = lista)
+
+
+### Produto ###
+# Tela com o formulário de criação de produto.
+@app.route("/estoque/novo", methods = ["GET"])
+def form_criar_produto_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    produto = {'id_produto': 'novo', 'nome': '', 'preco_atual': '', 'ingredientes': '', 'prazo_validade':'', 'descricao':''}
+
+    # Monta a resposta.
+    return render_template("cad_produto.html", logado = logado, produto = produto)
+
+# Tela com o formulário de alteração de produto existente.
+@app.route("/estoque/<int:id_produto>", methods = ["GET"])
+def form_alterar_produto_api(id_produto):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    produto = bd.db_consultar_produto(id_produto)
+    
+
+    # Monta a resposta.
+    if produto is None:
+        return render_template("estoque.html", logado = logado, mensagem = f"Esse produto não existe."), 404
+    return render_template("cad_produto.html", logado = logado, produto = protudo)
+
+
+# Processa o formulário de criação de produto.
+@app.route("/estoque/novo", methods = ["POST"])
+def criar_produto_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    nome = request.form["nome"]
+    preco_atual = request.form["preco_atual"]
+    ingredientes = request.form["ingredientes"]
+    prazo_validade = request.form["prazo_validade"]
+    descricao = request.form["descricao"]
+
+    # Faz o processamento.
+    produto = rg.criar_produto(nome, preco_atual, ingredientes, prazo_validade, descricao)
+
+    # Monta a resposta.
+    mensagem = f"O usuario {nome} foi criado com o id {produto['id_produto']}."
+    return render_template("estoque.html", logado = logado, mensagem = mensagem)
+
+
+
+# Processa o formulário de alteração de produto.
+@app.route("/estoque/<int:id_produto>", methods = ["POST"])
+def editar_produto_api(id_produto):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    nome = request.form["nome"]
+
+
+    # Faz o processamento.
+    status, produto = rg.editar_produto(id_produto, nome)
+
+    # Monta a resposta.
+    if status == 'não existe':
+        mensagem = "Esse produto nem mesmo existia mais."
+        return render_template("estoque.html", logado = logado, mensagem = mensagem), 404
+    mensagem = f"O produto {nome} com o id {id} foi editado."
+    return render_template("produto.html", logado = logado, mensagem = mensagem)
+
+
+#Fabricação#
+@app.route("/fabricacao")
+def listar_fabricacao_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    lista = bd.db_listar_fabricacao()
+
+    # Monta a resposta.
+    return render_template("fabricacao.html", logado = logado, fabricacao = lista)
+
+
+# Tela com o formulário de criação de fabricação.
+@app.route("/estoque/novafabricacao", methods = ["GET"])
+def form_criar_fabricacao_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    fabricacao = {'id_produto': 'novo', 'data_fabricacao': ''}
+
+    # Monta a resposta.
+    return render_template("cad_fabricacao.html", logado = logado, fabricacao = fabricacao)
+
+# Tela com o formulário de alteração de fabricacao existente.
+
+
+# Processa o formulário de criação de fabricacao.
+@app.route("/estoque/novafabricacao", methods = ["POST"])
+def criar_fabricacao_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    data_fabricacao = request.form["data_fabricacao"]
+
+    # Faz o processamento.
+    fabricacao = rg.criar_fabricacao(data_fabricacao)
+
+    # Monta a resposta.
+    mensagem = f"O usuario {nome} foi criado com o id {fabricacao['id_fabricacao']}."
+    return render_template("fabricacao.html", logado = logado, mensagem = mensagem)
+
+
+
+# Processa o formulário de alteração de fabricacao.
+
+# Tela com o formulário de criação de novo item de fabricação.
+@app.route("/fabricação/novo", methods = ["GET"])
+def form_criar_itemfabricacao_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    itemfabricacao = {'id_item': 'novo', 'id_fabricacao': '', 'id_produto': '', 'quantidade': '', 'prazo_vencimento': ''}
+
+    # Monta a resposta.
+    return render_template("cad_itemfabricacao.html", logado = logado, itemfabricacao = itemfabricacao)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### caixa ###
@@ -172,9 +476,9 @@ def listar_entradas_api():
         return redirect("/")
 
     # Faz o processamento.
-    lista = db_listar_saldo()
-    lista1 = db_listar_entradas()
-    lista2 = db_listar_saidas()
+    lista = bd.db_listar_saldo()
+    lista1 = bd.db_listar_entradas()
+    lista2 = bd.db_listar_saidas()
 
     # Monta a resposta.
     return render_template("caixa.html", logado = logado, saldo = lista, entradas = lista1, saidas = lista2)
@@ -212,108 +516,8 @@ def deletar_foto(id_foto):
 def autenticar_login():
     login = request.cookies.get("login", "")
     senha = request.cookies.get("senha", "")
-    return db_fazer_login(login, senha)
+    return bd.db_fazer_login(login, senha)
 
-
-##########################################
-#### Definições de regras de negócio. ####
-##########################################
-
-def criar_usuario(nome, login, senha, tipo, telefone):
-    return db_criar_usuario(nome, login, senha, tipo, telefone)
-
-def editar_usuario(id, nome, login, senha, tipo, telefone):
-    convite = db_consultar_usaurio(id)
-    db_editar_usuario(id, nome, login, senha, tipo, telefone)
-    return 'alterado', usuario
-
-###############################################
-#### Funções auxiliares de banco de dados. ####
-###############################################
-
-# Converte uma linha em um dicionário.
-def row_to_dict(description, row):
-    if row is None: return None
-    d = {}
-    for i in range(0, len(row)):
-        d[description[i][0]] = row[i]
-    return d
-
-# Converte uma lista de linhas em um lista de dicionários.
-def rows_to_dict(description, rows):
-    result = []
-    for row in rows:
-        result.append(row_to_dict(description, row))
-    return result
-
-
-
-####################################
-#### Definições básicas de DAO. ####
-####################################
-
-
-def conectar():
-    return mysql.connector.connect(host="adducis.ch3noq1jgsa1.us-east-2.rds.amazonaws.com",user="adducis",password= "654artesanais",database="Usuarios")
-
-def db_fazer_login(login, senha):
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT login, senha, nome, tipo FROM usuario WHERE login = %s AND senha = %s;", (login, senha))
-        return row_to_dict(cur.description, cur.fetchone())
-
-def db_consultar_usuario(id):
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT id, nome, login, senha, tipo FROM usuario WHERE a.id_aluno = %s;", (id_aluno))
-        return row_to_dict(cur.description, cur.fetchone())
-
-
-def db_listar_usuarios():
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT id, nome, login, senha, tipo, telefone FROM usuario")
-        return rows_to_dict(cur.description, cur.fetchall())
-
-
-def db_criar_usuario(nome, login, senha, tipo, telefone):
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("INSERT INTO usuario (nome, login, senha, tipo, telefone) VALUES (?, ?, ?, ?)", [nome, login, senha, tipo, telefone])
-        id = cur.lastrowid
-        con.commit()
-        return {'id': id, 'nome': nome, 'login': login, 'senha': senha, 'tipo': tipo, 'telefone': telefone}
-
-def db_editar_aluno(id, nome, login, senha, tipo, telefone):
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("UPDATE aluno SET nome = ?, login = ?, senha = ?, tipo = ?, telefone = ? WHERE id = ?", [nome, login, senha, tipo, telefone, id])
-        con.commit()
-        return {'id': id, 'nome': nome, 'login': login, 'senha': senha, 'tipo': tipo, 'telefone': telefone}
-
-
-
-def db_listar_insumos():
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT I.id_insumo, I.nome_insumo, coalesce(sum(C.quantidade_insumo), '-') as soma,  min(date_format(C.data_vencimento, '%d-%m-%Y')) as vencimento FROM insumos AS I LEFT JOIN itemcompra AS C ON I.id_insumo = C.id_insumo Where C.data_vencimento > CURDATE() GROUP BY I.id_insumo")
-        return rows_to_dict(cur.description, cur.fetchall())
-
-
-def db_listar_estoque():
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT P.id, P.nome_produto, sum(F.quantidade) - sum(V.quantidade) AS quantidade FROM produto as P LEFT JOIN itemfabricacao AS F ON P.id = F.id_produto LEFT JOIN itensvendas AS V ON P.id = V.id_produto GROUP BY P.id")
-        return rows_to_dict(cur.description, cur.fetchall())
-
-def db_listar_saldo():
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT X.data_registro as 'Data', format(coalesce(sum(X.valor_entrada),0)-(coalesce(sum(X.valor_saida),0)), 2) as ValorDia FROM caixa as X GROUP BY X.data_registro")
-        return rows_to_dict(cur.description, cur.fetchall())
-
-
-def db_listar_entradas():
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT V.data_venda as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(V.preco_venda), 2), '.', ',')) AS Valor FROM vendas as V GROUP BY V.data_venda")
-        return rows_to_dict(cur.description, cur.fetchall())
-
-def db_listar_saidas():
-    with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT C.data_compra as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(C.preco_compra), 2), '.', ',')) AS Valor FROM compra as C GROUP BY C.data_compra")
-        return rows_to_dict(cur.description, cur.fetchall())
 
 
 

@@ -7,6 +7,7 @@
     
     <div class="grid">
        <p><a href="/insumos/novo"><button>Adicionar Insumos</button>
+        <p><a href="/insumos/novo2"><button>Adicionar Compra</button>
           <table>
             <tr>
             <td>ID</td>
@@ -18,8 +19,8 @@
             </tr>
         {% for insumos in insumo %}
             <tr>
-                <td>{{insumos['id_insumo']}}</td>
-                <td>{{insumos['nome_insumo']}}</td>
+                <td>{{insumos['id']}}</td>
+                <td>{{insumos['nome']}}</td>
                 <td>{{insumos['soma']}}</td>
                 <td>{{insumos['vencimento']}}</td>
                 <td><a href="">Editar</a></td>

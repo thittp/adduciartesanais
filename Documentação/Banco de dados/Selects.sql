@@ -1,24 +1,27 @@
-SELECT I.id_insumo, I.nome_insumo, coalesce(sum(C.quantidade_insumo), '-') as soma,  min(date_format(C.data_vencimento, '%d-%m-%Y')) as vencimento
+SELECT I.id_insumo as Id, I.nome, coalesce(sum(C.quantidade_insumo), '-') as soma,  coalesce(min(date_format(C.data_vencimento, '%d-%m-%Y')), '-') as vencimento
 FROM insumos AS I
-LEFT JOIN itemcompra AS C ON I.id_insumo = C.id_insumo
-Where C.data_vencimento > CURDATE()
+Right JOIN itemcompra AS C ON I.id_insumo = C.id_insumo
+Where C.data_vencimento < CURDATE()
 GROUP BY I.id_insumo
 
 
-convusuarios
+SELECT I.id_insumo as Id, I.nome, coalesce(sum(C.quantidade_insumo), '-') as soma,  coalesce(max(date_format(C.data_vencimento, '%d-%m-%Y')), '-') as vencimento
+FROM insumos AS I
+Left JOIN itemcompra AS C ON I.id_insumo = C.id_insumo
+GROUP BY I.id_insumo
+
+Where C.data_vencimento > CURDATE()
 
 
-
-
-
-
+Where (C.data_vencimento > CURDATE()
+Where (C.data_vencimento > CURDATE()
 
 CASE when coluna1 IS NULL THEN 0,
 
 
 
 
-
+CASE when coluna1 IS NULL THEN 0,
 
 
 SELECT Tipo, SUM(Quantidade) AS 'Quantidade em Estoque'
