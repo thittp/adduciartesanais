@@ -32,7 +32,7 @@ def rows_to_dict(description, rows):
 #### Definições básicas de BD. ####
 ####################################
 
-
+### Partes de login. ###
 def conectar():
     return mysql.connector.connect(host="adducis.ch3noq1jgsa1.us-east-2.rds.amazonaws.com",user="adducis",password= "654artesanais",database="Usuarios")
 
@@ -47,6 +47,7 @@ def db_consultar_usuario(id):
         return row_to_dict(cur.description, cur.fetchone())
 
 
+### Cadastro de usuarios. ###
 def db_listar_usuarios():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
         cur.execute("SELECT id, nome, login, senha, tipo, telefone FROM usuario")
@@ -59,6 +60,7 @@ def db_criar_usuario(nome, login, senha, tipo, telefone):
         id = cur.lastrowid
         con.commit()
         return {'id': id, 'nome': nome, 'login': login, 'senha': senha, 'tipo': tipo, 'telefone': telefone}
+
 
 def db_editar_usuario(id, nome, login, senha, tipo, telefone):
     with closing(conectar()) as con, closing(con.cursor()) as cur:
@@ -73,24 +75,70 @@ def db_deletar_usuario(id):
         con.commit()
 
 
-def db_listar_insumos():
+### produtos ###
+def db_listar_produtos():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT I.id_insumo as id, I.nome, coalesce(sum(C.quantidade_insumo), '-') as soma,  coalesce(max(date_format(C.data_vencimento, '%d-%m-%Y')), '-') as vencimento FROM insumos AS I Left JOIN itemcompra AS C ON I.id_insumo = C.id_insumo GROUP BY I.id_insumo")
+        cur.execute("SELECT id_produto, nome, preco_atual, ingredientes, prazo_validade, descricao FROM produto")
+        return rows_to_dict(cur.description, cur.fetchall())
+
+
+
+
+
+### insumo ###
+def db_listar_insumo():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT I.id_insumo, I.nome, coalesce(sum(C.quantidade_insumo), '-') as soma,  coalesce(max(date_format(C.data_vencimento, '%d/%m/%Y')), '-') as vencimento FROM insumo AS I Left JOIN itemcompra AS C ON I.id_insumo = C.id_insumo GROUP BY I.id_insumo")
         return rows_to_dict(cur.description, cur.fetchall())
 
 
 def db_criar_insumo(nome):
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("INSERT INTO insumos (nome) VALUES (%s)", [nome])
+        cur.execute("INSERT INTO insumo (nome) VALUES (%s)", [nome])
         id_insumo = cur.lastrowid
         con.commit()
         return {'id_insumo': id_insumo, 'nome': nome}
 
 def db_editar_insumo(id_insumo, nome):
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("UPDATE insumos SET nome = %s WHERE id = %s", [nome, id_insumo])
+        cur.execute("UPDATE insumo SET nome = %s WHERE id_insumo = %s", [nome, id_insumo])
         con.commit()
         return {'id_insumo': id_insumo, 'nome': nome}
+
+def db_consultar_insumo(id_insumo):
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT id_insumo, nome FROM insumo WHERE id_insumo = (%s)", [id_insumo])
+        return row_to_dict(cur.description, cur.fetchone())
+
+
+
+### compra ###
+def db_listar_compra():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT C.id_compra, date_format(C.data_compra, '%d/%m/%Y') as datacompra, C.preco_compra as soma FROM compra AS C")
+        return rows_to_dict(cur.description, cur.fetchall())
+
+def db_criar_compra(data_compra, preco_compra):
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("INSERT INTO compra (data_compra, preco_compra) VALUES (%s, %s)", [data_compra, preco_compra])
+        id_compra = cur.lastrowid
+        con.commit()
+        return {'id_compra': id_compra, 'data_compra': data_compra}
+
+def db_consultar_compra(id_compra):
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT id_compra, data_compra FROM compra WHERE id_compra = (%s)", [id_compra])
+        return row_to_dict(cur.description, cur.fetchone())
+
+### itemcompra ###
+
+
+
+def db_listar_item():
+    with closing(conectar()) as con, closing(con.cursor()) as cur:
+        cur.execute("SELECT * FROM itemcompra")
+        return rows_to_dict(cur.description, cur.fetchall())
+
 
 
 
@@ -122,23 +170,23 @@ def db_editar_produto(id_produto, nome):
 #fabricacao
 def db_listar_fabricacao():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT F.id_fabricacao, F.data_fabricacao, coalesce(sum(I.quantidade), '-') as soma FROM fabricacao AS F Left JOIN itemfabricacao AS I ON F.id_fabricacao = I.id_fabricacao GROUP BY F.id_fabricacao")
+        cur.execute("SELECT F.id_fabricacao, date_format(F.data_fabricacao, '%d/%m/%Y') as data_fabricacao, coalesce(sum(I.quantidade), '-') as soma FROM fabricacao AS F Left JOIN itemfabricacao AS I ON F.id_fabricacao = I.id_fabricacao GROUP BY F.id_fabricacao")
         return rows_to_dict(cur.description, cur.fetchall())
 
 
 #Caixa
 def db_listar_saldo():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT X.data_registro as 'Data', format(coalesce(sum(X.valor_entrada),0)-(coalesce(sum(X.valor_saida),0)), 2) as ValorDia FROM caixa as X GROUP BY X.data_registro")
+        cur.execute("SELECT date_format(X.data_registro, '%d/%m/%Y') as 'Data', format(coalesce(sum(X.valor_entrada),0)-(coalesce(sum(X.valor_saida),0)), 2) as ValorDia FROM caixa as X GROUP BY X.data_registro")
         return rows_to_dict(cur.description, cur.fetchall())
 
 
 def db_listar_entradas():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT V.data_venda as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(V.preco_venda), 2), '.', ',')) AS Valor FROM vendas as V GROUP BY V.data_venda")
+        cur.execute("SELECT date_format(V.data_venda, '%d/%m/%Y') as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(V.preco_venda), 2), '.', ',')) AS Valor FROM vendas as V GROUP BY V.data_venda")
         return rows_to_dict(cur.description, cur.fetchall())
 
 def db_listar_saidas():
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT C.data_compra as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(C.preco_compra), 2), '.', ',')) AS Valor FROM compra as C GROUP BY C.data_compra")
+        cur.execute("SELECT date_format(C.data_compra, '%d/%m/%Y') as 'Data', CONCAT('R$ ', Replace(FORMAT(sum(C.preco_compra), 2), '.', ',')) AS Valor FROM compra as C GROUP BY C.data_compra")
         return rows_to_dict(cur.description, cur.fetchall())

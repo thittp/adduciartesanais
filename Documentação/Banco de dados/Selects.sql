@@ -1,8 +1,26 @@
+SELECT F.id_fabricacao, F.data_fabricacao, coalesce(sum(I.quantidade), '-') as soma
+FROM fabricacao AS F
+Left JOIN itemfabricacao AS I ON F.id_fabricacao = I.id_fabricacao
+GROUP BY F.id_fabricacao
+
+
+
+
+
 SELECT I.id_insumo as Id, I.nome, coalesce(sum(C.quantidade_insumo), '-') as soma,  coalesce(min(date_format(C.data_vencimento, '%d-%m-%Y')), '-') as vencimento
 FROM insumos AS I
 Right JOIN itemcompra AS C ON I.id_insumo = C.id_insumo
 Where C.data_vencimento < CURDATE()
 GROUP BY I.id_insumo
+
+
+SELECT C.id_compra, C.data_compra, coalesce(sum(I.preco_insumo * I.quantidade_insumo), '-') as soma
+FROM compra AS C
+LEFT JOIN itemcompra AS I ON I.id_compra = C.id_compra
+GROUP BY I.id_compra
+
+
+
 
 
 SELECT I.id_insumo as Id, I.nome, coalesce(sum(C.quantidade_insumo), '-') as soma,  coalesce(max(date_format(C.data_vencimento, '%d-%m-%Y')), '-') as vencimento

@@ -7,7 +7,8 @@
     
     <div class="grid">
        <p><a href="/usuarios/novo"><button>Convidar usuário</button>
-    <table>
+    <table class="tablesorter">
+        <thead>
         <tr>
             <td>ID</td>
             <td>Nome</td>
@@ -17,7 +18,10 @@
             <td>Tipo</td>
             <td>&nbsp;</td>
         </tr>
+        </thead>
+        
         {% for usuario in usuarios %}
+        <tbody>
             <tr>
                 <td>{{usuario['id']}}</td>
                 <td>{{usuario['nome']}}</td>
@@ -27,6 +31,7 @@
                 <td>{{usuario['tipo']}}</td>
                 <td><a href="/usuarios/{{usuario['id']}}">Editar</a></td>
             </tr>
+        </tbody>
         {% endfor %}
     </table>
     </div>

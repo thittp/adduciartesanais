@@ -4,7 +4,7 @@ body {
     background-repeat: no-repeat;
     background-position: center top;
     background-attachment: fixed;    
-    min-height: 100%;
+    min-height: 10%;
   }
 
 
@@ -19,42 +19,92 @@ body {
     border:1px solid #ccc;    
 }
 
+body{
+    margin: 50px;
+    font-size: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+}
 
-input[type=text],
-input[type=email],
-input[type=number],
-input[type=password],
-textarea{
+
+header{
+    background-color: #d2edf4;
+    padding: 1;
+    text-align: left;
+    font-size: 15px;
+}
+
+
+nav{
+    overflow: hidden;
+    background-color: rgb(219, 216, 216);
+}
+
+nav a{
+    float: left;
+    color:black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+nav a:hover{
+    background-color: rgb(185, 179, 179);
+}
+
+nav a.ativo{
+    background-color: rgb(185, 179, 179);
+}
+
+.FixoNoTopo{
+    position: fixed;
+    top: 0px;
     width: 100%;
-    padding-left: 10px;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 15px;
-    border: 1px solid #ccc;
-    outline: none;
 }
 
-.myButton {
-	box-shadow: 0px 10px 14px -7px #276873;
-	background:linear-gradient(to bottom, #599bb3 5%, #d2edf4 100%);
-	background-color:#599bb3;
-	border-radius:8px;
-	display:inline-block;
-	cursor:pointer;
-	color:#755b75;
-	font-family:Arial;
-	font-size:20px;
-	font-weight:bold;
-	padding:13px 32px;
-	text-decoration:none;
-	text-shadow:0px 1px 0px #3d768a;
+.FixoNoTopo + .principal{
+    padding-top: 60px;
 }
 
-.myButton:hover {
-	background:linear-gradient(to bottom, #d2edf4 5%, #599bb3 100%);
-	background-color:#d2edf4;
+h1 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 500;
+    line-height: 1.1;
+    color: rgb(42, 43, 42)
 }
-.myButton:active {
-	position:relative;
-	top:1px;
+
+
+h2 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 500;
+    line-height: 1.1;
+    color: rgb(42, 43, 42)
 }
+
+
+
+.grid table {
+    text-transform: uppercase;
+    border-spacing: 0px;
+    border-collapse: collapse;
+    margin: 1 auto;
+    color: #595c62;
+    font-size: 0.6em;
+    font-family: 'verdana';
+    text-align: center;
+    width: 100%;
+    display: block;
+}
+
+.grid table .top td, .inANDout table .dados:last-of-type td{
+  border-bottom: 2px solid #595c62;
+ 
+}
+.grid table td{
+  border-left: 1px solid #ddd;
+  padding:1em;
+}
+.grid table td:first-of-type{
+  border-left: none;
+}
+

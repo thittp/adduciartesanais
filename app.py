@@ -17,11 +17,11 @@ app = Flask(__name__)
 def menu():
     logado = autenticar_login()
     if logado is None:
-        return render_template("/index.html", erro = "")
+        return render_template("/login.html", erro = "")
     if logado['tipo']=="admin":
-        return render_template("dashmaster.html", logado = logado, mensagem = "")
+        return redirect('/caixa')
     else:
-        return render_template("dashvendedor.html", logado = logado, mensagem = "")  
+        return redirect('/caixa')
 
 
 @app.route("/login", methods = ["POST"])
@@ -38,7 +38,7 @@ def login():
 
     # Monta a resposta.
     if logado is None:
-        return render_template("index.html", erro = "Ops. A senha estava errada.")
+        return render_template("login.html", erro = "Ops. A senha estava errada.")
     resposta = make_response(redirect("/"))
 
     # Armazena o login realizado com sucesso em cookies (autenticação).
@@ -49,7 +49,7 @@ def login():
 @app.route("/logout", methods = ["POST"])
 def logout():
     # Monta a resposta.
-    resposta = make_response(render_template("index.html", mensagem = "Tchau."))
+    resposta = make_response(render_template("login.html", mensagem = "Tchau."))
 
     # Limpa os cookies com os dados de login (autenticação).
     resposta.set_cookie("login", "", samesite = "Strict")
@@ -57,9 +57,10 @@ def logout():
     return resposta
 
 
+
+
+
 ## Dasboard ####
-
-
 @app.route("/dashmaster")
 def dashmaster():
     # Autenticação.
@@ -116,7 +117,9 @@ def form_alterar_usuario_api(id):
 
     # Monta a resposta.
     if usuario is None:
-        return render_template("usuarios.html", logado = logado, mensagem = f"Esse usuario não existe."), 404
+        # Faz o processamento.
+        lista = bd.db_listar_usuarios()
+        return render_template("usuarios.html", logado = logado, usuarios = lista, mensagem = f"Esse usuario não existe."), 404
     return render_template("form_usuario.html", logado = logado, usuario = usuario)
 
 # Processa o formulário de criação de usuarios. 
@@ -139,7 +142,9 @@ def criar_usuario_api():
 
     # Monta a resposta.
     mensagem = f"O usuario {nome} foi criado com o id {usuario['id']}."
-    return render_template("usuarios.html", logado = logado, mensagem = mensagem)
+    # Faz o processamento.
+    lista = bd.db_listar_usuarios()
+    return render_template("usuarios.html", usuarios = lista, logado = logado, mensagem = mensagem)
 
 # Processa o formulário de alteração de usuarios.
 @app.route("/usuarios/<int:id>", methods = ["POST"])
@@ -158,13 +163,14 @@ def editar_usuario_api(id):
 
     # Faz o processamento.
     status, usuario = rg.editar_usuario(id, nome, login, senha, tipo, telefone)
+    lista = bd.db_listar_usuarios()
 
     # Monta a resposta.
     if status == 'não existe':
         mensagem = "Esse usuario nem mesmo existia mais."
-        return render_template("usuarios.html", logado = logado, mensagem = mensagem), 404
+        return render_template("usuarios.html", logado = logado, usuarios = lista, mensagem = mensagem), 404
     mensagem = f"O usuario {nome} com o id {id} foi editado."
-    return render_template("usuarios.html", logado = logado, mensagem = mensagem)
+    return render_template("usuarios.html", logado = logado, usuarios = lista, mensagem = mensagem)
 
 # Processa o botão de excluir um usuarios.
 @app.route("/usuarios/<int:id>", methods = ["DELETE"])
@@ -176,32 +182,49 @@ def deletar_usuario_api(id):
 
     # Faz o processamento.
     usuario = rg.apagar_usuario(id)
+    lista = bd.db_listar_usuarios()
 
     # Monta a resposta.
     if usuario is None:
-        return render_template("usuario.html", logado = logado, mensagem = "Esse usuario nem mesmo existia mais."), 404
+        return render_template("usuarios.html", logado = logado, usuarios = lista, mensagem = "Esse usuario nem mesmo existia mais."), 404
     mensagem = f"O usuario com o id {id} foi excluído."
-    return render_template("usuarios.html", logado = logado, mensagem = mensagem)
+    return render_template("usuarios.html", logado = logado, usuarios = lista, mensagem = mensagem)
 
 
 
-
-### insumos ###
-@app.route("/insumos")
-def listar_insumos_api():
+### Produtos ###
+@app.route("/produtos")
+def listar_prosutos_api():
     # Autenticação.
     logado = autenticar_login()
     if logado is None:
         return redirect("/")
 
     # Faz o processamento.
-    lista = bd.db_listar_insumos()
+    lista = bd.db_listar_produtos()
 
     # Monta a resposta.
-    return render_template("insumos.html", logado = logado, insumo = lista)
+    return render_template("produtos.html", logado = logado, produto = lista)
+    
 
-# Tela com o formulário de criação de insumos.
-@app.route("/insumos/novo", methods = ["GET"])
+
+
+### insumo ###
+@app.route("/insumo")
+def listar_insumo_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    lista = bd.db_listar_insumo()
+
+    # Monta a resposta.
+    return render_template("insumo.html", logado = logado, insumo = lista)
+
+# Tela com o formulário de criação de insumo.
+@app.route("/insumo/novo", methods = ["GET"])
 def form_criar_insumo_api():
     # Autenticação.
     logado = autenticar_login()
@@ -209,14 +232,14 @@ def form_criar_insumo_api():
         return redirect("/")
 
     # Faz o processamento.
-    insumo = {'id': 'novo', 'nome': ''}
+    insumo = {'id_insumo': 'novo', 'nome': ''}
 
     # Monta a resposta.
     return render_template("cad_insumo.html", logado = logado, insumo = insumo)
 
 # Tela com o formulário de alteração de insumo existente.
-@app.route("/insumo/<int:id>", methods = ["GET"])
-def form_alterar_insumo_api(id):
+@app.route("/insumo/<int:id_insumo>", methods = ["GET"])
+def form_alterar_insumo_api(id_insumo):
     # Autenticação.
     logado = autenticar_login()
     if logado is None:
@@ -228,11 +251,11 @@ def form_alterar_insumo_api(id):
 
     # Monta a resposta.
     if insumo is None:
-        return render_template("insumos.html", logado = logado, mensagem = f"Esse insumo não existe."), 404
+        return render_template("insumo.html", logado = logado, mensagem = f"Esse insumo não existe."), 404
     return render_template("cad_insumo.html", logado = logado, insumo = insumo)
 
 # Processa o formulário de criação de insumo. 
-@app.route("/insumos/novo", methods = ["POST"])
+@app.route("/insumo/novo", methods = ["POST"])
 def criar_insumo_api():
     # Autenticação.
     logado = autenticar_login()
@@ -246,11 +269,13 @@ def criar_insumo_api():
     insumo = rg.criar_insumo(nome)
 
     # Monta a resposta.
-    mensagem = f"O Insumo {nome} foi criado com o id {insumo['id_insumo']}."
-    return render_template("insumos.html", logado = logado, mensagem = mensagem)
+    mensagem = f"O Insumo foi criado com o id."
+    return redirect('/insumo')
+    #redirect('/insumo')
+
 
 # Processa o formulário de alteração de insumo.
-@app.route("/insumos/<int:id>", methods = ["POST"])
+@app.route("/insumo/<int:id_insumo>", methods = ["POST"])
 def editar_insumo_api(id_insumo):
     # Autenticação.
     logado = autenticar_login()
@@ -267,26 +292,80 @@ def editar_insumo_api(id_insumo):
     # Monta a resposta.
     if status == 'não existe':
         mensagem = "Esse insumo nem mesmo existia mais."
-        return render_template("insumos.html", logado = logado, mensagem = mensagem), 404
-    mensagem = f"O insumo {nome} com o id {id} foi editado."
-    return render_template("insumos.html", logado = logado, mensagem = mensagem)
+        return render_template("insumo.html", logado = logado, mensagem = mensagem), 404
+    mensagem = f"O insumo {nome} com o id {id_insumo} foi editado."
+    return render_template("insumo.html", logado = logado, mensagem = mensagem)
 
-# Processa o botão de excluir um insumos.
-@app.route("/insumos/<int:id>", methods = ["DELETE"])
-def deletar_insumo_api(id_insumo):
+
+### compra ###
+@app.route("/insumo/compra")
+def listar_compra_api():
     # Autenticação.
     logado = autenticar_login()
     if logado is None:
         return redirect("/")
 
     # Faz o processamento.
-    insumo = rg.apagar_insumo(id_insumo)
+    lista = bd.db_listar_compra()
 
     # Monta a resposta.
-    if insumo is None:
-        return render_template("insumos.html", logado = logado, mensagem = "Esse insumo nem mesmo existia mais."), 404
-    mensagem = f"O insumo com o id {id_insumo} foi excluído."
-    return render_template("insumos.html", logado = logado, mensagem = mensagem)
+    return render_template("compra.html", logado = logado, compra = lista)
+
+# Tela com o formulário de criação de compra.
+@app.route("/insumo/compra/novo", methods = ["GET"])
+def form_criar_compra_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+  
+    compra = {'id_compra': 'novo', 'data_compra': '', 'preco_compra': ''}
+
+    # Monta a resposta.
+    return render_template("cad_compra.html", logado = logado, compra = compra)
+
+
+# Processa o formulário de criação de compra. 
+@app.route("/insumo/compra/novo", methods = ["POST"])
+def criar_compra_api():
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Extrai os dados do formulário.
+    data_compra = request.form["data_compra"]
+    preco_compra = request.form["preco_compra"]
+
+    # Faz o processamento.
+    compra = rg.criar_compra(data_compra, preco_compra)
+
+    # Monta a resposta.
+    mensagem = f"O aluno  foi criado com o id ."
+    return redirect('/insumo')
+
+
+
+### itemcompra ###
+@app.route("/insumo/compra/item<int:id_compra>")
+def listar_itemcompra_api(id_compra):
+    # Autenticação.
+    logado = autenticar_login()
+    if logado is None:
+        return redirect("/")
+
+    # Faz o processamento.
+    compra = bd.db_consultar_compra(id_compra)
+    itemcompra = bd.db_listar_item()
+
+    # Monta a resposta.
+    return render_template("item_compra.html", logado = logado, compra = compra, itemcompra = itemcompra)
+
+
+
+
 
 
 
@@ -308,7 +387,7 @@ def listar_estoque_api():
 
 ### Produto ###
 # Tela com o formulário de criação de produto.
-@app.route("/estoque/novo", methods = ["GET"])
+@app.route("/produtos/novo", methods = ["GET"])
 def form_criar_produto_api():
     # Autenticação.
     logado = autenticar_login()
@@ -336,11 +415,11 @@ def form_alterar_produto_api(id_produto):
     # Monta a resposta.
     if produto is None:
         return render_template("estoque.html", logado = logado, mensagem = f"Esse produto não existe."), 404
-    return render_template("cad_produto.html", logado = logado, produto = protudo)
+    return render_template("cad_produto.html", logado = logado, produto = produto)
 
 
 # Processa o formulário de criação de produto.
-@app.route("/estoque/novo", methods = ["POST"])
+@app.route("/produtos/novo", methods = ["POST"])
 def criar_produto_api():
     # Autenticação.
     logado = autenticar_login()
@@ -359,7 +438,8 @@ def criar_produto_api():
 
     # Monta a resposta.
     mensagem = f"O usuario {nome} foi criado com o id {produto['id_produto']}."
-    return render_template("estoque.html", logado = logado, mensagem = mensagem)
+    return redirect('/produtos')
+    #render_template("estoque.html", logado = logado, mensagem = mensagem)
 
 
 

@@ -96,15 +96,14 @@ CREATE TABLE itensvendas (
 );
 
 
-CREATE TABLE insumos (
+CREATE TABLE insumo (
   id_insumo INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  nome_insumo VARCHAR(20)
+  nome VARCHAR(20)
 );
 
 CREATE TABLE compra (
   id_compra INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  data_compra DATE NOT NULL,
-  preco_compra float NOT NULL
+  data_compra DATE NOT NULL
 );
 
 CREATE TABLE itemcompra (

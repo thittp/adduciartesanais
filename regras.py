@@ -24,18 +24,42 @@ def apagar_usuario(id):
     return usuario
 
 
+# produto
+def criar_produto(id_produto, nome, preco_atual, ingredientes, prazo_validade, descricao):
+    return bd.db_criar_produto(id_produto, nome, preco_atual, ingredientes, prazo_validade, descricao)
 
-# insumos
+
+# insumo
 def criar_insumo(nome):
     return bd.db_criar_insumo(nome)
 
 
-def editar_insumo(id_insumo):
+def editar_insumo(id_insumo, nome):
     insumo = bd.db_consultar_insumo(id_insumo)
     if insumo is None:
         return 'não existe', None
     bd.db_editar_insumo(id_insumo, nome)
     return 'alterado', insumo
+
+### compra ###
+def criar_compra(data_compra, preco_compra):
+    return bd.db_criar_compra(data_compra, preco_compra)
+
+def editar_compra(id_compra, data_compra):
+    compra = bd.db_consultar_compra(id_compra)
+    if compra is None:
+        return 'não existe', None
+    bd.db_editar_compra(id_compra, data_compra)
+    return 'alterado', compra
+
+def item_compra(id_compra, data_compra):
+    compra = bd.db_consultar_compra(id_compra)
+    if compra is None:
+        return 'não existe', None
+    return 'alterado', compra
+
+
+
 
 
 #produtos
@@ -51,4 +75,4 @@ def editar_produto(nome, preco_atual, ingredientes, prazo_validade, descricao):
     return 'alterado', produto
 
 
-
+#produtos
